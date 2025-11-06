@@ -147,6 +147,7 @@ addon.dungeonTeleportSpellName = {
     [542] = "Path of the Eco-Dome",
 
 }
+
 addon.dungeonTeleportSpellID = {
     -- TWW S3
     [378] = 354465,
@@ -158,8 +159,6 @@ addon.dungeonTeleportSpellID = {
     [525] = 1216786,
     [542] = 1237215,
 }
-
-
 
 addon.colors = {
     [0]  = {r=157, g=157, b=157}, -- Grey
