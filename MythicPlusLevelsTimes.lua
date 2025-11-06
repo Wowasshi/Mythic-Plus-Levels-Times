@@ -66,7 +66,13 @@ local sort_dungeons = function(map_table)
     end    
     
     -- 2) sort them!
-    table.sort(map_table, function(a,b) return map_scores[a] > map_scores[b] end);
+    table.sort(map_table, function(a,b) 
+            if map_scores[a] == 0 and map_scores[b] == 0 then
+                return a > b
+            else
+                return map_scores[a] > map_scores[b]
+            end
+        end);
     return map_table
     
 end
@@ -131,23 +137,24 @@ local main = function (arr, event)
     
 end
 
-local frame = CreateFrame("Frame", "MythicPlusTimes" .. "Frame", UIParent)
-frame:SetSize(50*8,100)
-frame:SetPoint("BOTTOMLEFT", PVEFrame, "BOTTOMLEFT", 15,-130)
-frame:RegisterEvent("ADDON_LOADED")
-frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
-frame:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
+local function spellInTable(spellID)
+    for _, v in pairs(L.dungeonTeleportSpellID) do
+        if spellID == v then
+            return true
+        end
+    end
+    return false
+end
 
-local iconFrame = CreateFrame("Button", "MythicPlusTimesBar", frame, "InsecureActionButtonTemplate")
-iconFrame:SetAllPoints()
-iconFrame:Hide()
+local function updateCooldown(spellID) 
+    for k, _ in pairs(L.regions.subRegion) do
+        local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
+        L.regions.subRegion[k].cooldown:Clear()
+        L.regions.subRegion[k].cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration)
+    end
+end
 
-
-
-frame:Hide()
-
-local function renderDungeons(arr)
+local function renderDungeons(arr, boundFrame)
     
     local sizeX = L.config.buttonSettings.buttonDimension.x
     local sizeY = L.config.buttonSettings.buttonDimension.y
@@ -158,7 +165,7 @@ local function renderDungeons(arr)
     for k, maps in pairs(arr) do
         if L.regions.subRegion[k] == nil then
             L.regions.subRegion[k] = {
-                buttonFrame = CreateFrame("Button", "MythicPlusTimesBar" .. k .. "Button", iconFrame, "InsecureActionButtonTemplate"),
+                buttonFrame = CreateFrame("Button", "MythicPlusTimesBar" .. k .. "Button", boundFrame, "InsecureActionButtonTemplate"),
                 borderFrame = nil,
                 text1 = nil,
                 text2 = nil,
@@ -178,7 +185,7 @@ local function renderDungeons(arr)
 
         L.regions.subRegion[k].buttonFrame:SetSize(sizeX,sizeY)
         L.regions.subRegion[k].buttonFrame:SetFrameStrata("HIGH")
-        L.regions.subRegion[k].buttonFrame:SetPoint("LEFT", iconFrame, "LEFT", ((k-1)*sizeX) + (k*(spacing+(borderWidth/2))),0)
+        L.regions.subRegion[k].buttonFrame:SetPoint("LEFT", boundFrame, "LEFT", ((k-1)*sizeX) + (k*(spacing+(borderWidth/2))),0)
         L.regions.subRegion[k].buttonFrame:RegisterForClicks("AnyUp", "AnyDown")
         L.regions.subRegion[k].buttonFrame:SetAttribute("type", "spell")
         L.regions.subRegion[k].buttonFrame:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
@@ -237,20 +244,30 @@ local function renderDungeons(arr)
         
         L.regions.subRegion[k].buttonFrame:Show()
     end
-    
 end
+
+local frame = CreateFrame("Frame", "MythicPlusTimes" .. "Frame", UIParent)
+frame:SetSize(50*8,100)
+frame:SetPoint("BOTTOMLEFT", PVEFrame, "BOTTOMLEFT", 15,-130)
+frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
+frame:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
+frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+frame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+
+local iconFrame = CreateFrame("Button", "MythicPlusTimesBar", frame, "InsecureActionButtonTemplate")
+iconFrame:SetAllPoints()
+iconFrame:Show()
+
+frame:Hide()
 
 local function hideFrame(self)
     frame:Hide()
-    iconFrame:Hide()
-    -- for _,v in pairs(regions.subRegion) do
-    --     v.iconFrame.Hide()
-    -- end
 end
 
 local function showFrame(self)
     frame:Show()
-    iconFrame:Show()
 end
 
 local status, pveFrameLoaded = pcall(function() return PVEFrame end)
@@ -261,8 +278,8 @@ if status and pveFrameLoaded then
 else 
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("ADDON_LOADED")
-    eventFrame:SetScript("OnEvent", function(self, addon)
-        if addon == "Blizzard_PVEUI" then
+    eventFrame:SetScript("OnEvent", function(self, addOn)
+        if addOn == "Blizzard_PVEUI" then
             PVEFrame:HookScript("onShow",showFrame)
             PVEFrame:HookScript("onHide",hideFrame)
             self:UnregisterAllEvents()
@@ -271,12 +288,16 @@ else
 end
 
 frame:SetScript("OnEvent", function(self, event, ...)    
-    if event == "ADDON_LOADED" or event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
-        self:UnregisterEvent(event)
-        -- load config
-        -- load initial logic checks
-        -- load main logic
+    if event == "ADDON_LOADED" or event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" or event == "PLAYER_ENTERING_WORLD" or event == "WEEKLY_REWARDS_UPDATE" then
+        -- self:UnregisterEvent(event)
         main(L.dungeonStates, event)
-        renderDungeons(L.dungeonStates)
+        renderDungeons(L.dungeonStates, iconFrame)
+    end
+
+    if event == "SPELL_UPDATE_COOLDOWN" then
+        local spellId = ...
+        if spellInTable(spellId) then
+            updateCooldown(spellId)
+        end
     end
 end)
