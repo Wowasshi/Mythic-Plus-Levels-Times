@@ -195,7 +195,17 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].borderFrame:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 0)
         L.regions.subRegion[k].borderFrame:SetFrameStrata("BACKGROUND")
         L.regions.subRegion[k].borderFrame:SetBackdrop(backdropInfo)
-        local spellID = C_Spell.GetSpellIDForSpellIdentifier(L.dungeonTeleportSpellID[maps.mapID])
+        local mySpellID = L.dungeonTeleportSpellID[maps.mapID]
+        if (type(mySpellID) == "table") then
+            local faction = UnitFactionGroup("player")
+            if (faction == "Alliance" or faction == "Horde") then
+                mySpellID = mySpellID[UnitFactionGroup("player")]
+            end
+        end
+        local spellID = nil
+        if type(mySpellID) == "number" then
+            spellID = C_Spell.GetSpellIDForSpellIdentifier(mySpellID)
+        end
         if not spellID then
             L.regions.subRegion[k].borderFrame:SetBackdropBorderColor(0,0,0,1)
             L.regions.subRegion[k].borderFrame:SetBackdropColor(0,0,0,1)
@@ -289,7 +299,9 @@ end
 
 frame:SetScript("OnEvent", function(self, event, ...)    
     if event == "ADDON_LOADED" or event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" or event == "PLAYER_ENTERING_WORLD" or event == "WEEKLY_REWARDS_UPDATE" then
-        -- self:UnregisterEvent(event)
+        if event == "ADDON_LOADED" or event == "PLAYER_ENTERING_WORLD" then
+            self:UnregisterEvent(event)
+        end
         main(L.dungeonStates, event)
         renderDungeons(L.dungeonStates, iconFrame)
     end
