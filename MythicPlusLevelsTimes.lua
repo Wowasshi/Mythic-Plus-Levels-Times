@@ -77,16 +77,25 @@ local sort_dungeons = function(map_table)
     
 end
 
-local main = function (arr, event)
-    
+local main = function (arr, event, ...)
     
     if event == "PLAYER_ENTERING_WORLD" then
+        local entering = ...
+        if entering then
+            if next(L.regions.subRegion) ~= nil then
+                for k, v in pairs(L.regions.subRegion) do
+                    L.regions.subRegion[k].buttonFrame:Hide()
+                end
+                L.dungeonStates = {}
+            end
+        end
         C_MythicPlus.RequestMapInfo()
         return 
     end
     
     local map_table = {}
     local timeRunner = PlayerGetTimerunningSeasonID()
+    
     if timeRunner then
         map_table = L.legionRemixDungeonsMapIDs
     else
@@ -103,36 +112,54 @@ local main = function (arr, event)
         local name, _, timeLimit, icon = C_ChallengeMode.GetMapUIInfo(mapID)
 
         local timeFormatted = ("%02i:%02i:%02i"):format(timeLimit/60^2, timeLimit/60%60, timeLimit/60)
-        arr[i] = {
-            mapID = mapID,
-            show = true,
-            changed = true,
-            name = name,
-            icon = icon,
-            level = 0,
-            score = score or 0,
-            deplete = false,
-            duration = timeFormatted,
-            timeLeft = "",
-            bestTime = "",
-            tooltip = name .. "\n",
-            abbr = L.dungeonNames[mapID] or "",
-        }
-
-        for _, alt in pairs(alts or {}) do
-            local state = arr[i]
-            if alt.score == score then
-                state.level = alt.level
-            end 
-            if alt.overTime then
-                state.deplete = alt.overTime
+        if not timeRunner or timeRunner == 0 then
+            arr[i] = {
+                mapID = mapID,
+                show = true,
+                changed = true,
+                name = name,
+                icon = icon,
+                level = 0,
+                score = score or 0,
+                deplete = false,
+                duration = timeFormatted,
+                timeLeft = "",
+                bestTime = "",
+                tooltip = name .. "\n",
+                abbr = L.dungeonNames[mapID] or "",
+            }
+    
+            for _, alt in pairs(alts or {}) do
+                local state = arr[i]
+                if alt.score == score then
+                    state.level = alt.level
+                end 
+                if alt.overTime then
+                    state.deplete = alt.overTime
+                end
+                
+                state.bestTime = ("%02i:%02i:%02i"):format(alt.durationSec/60^2, alt.durationSec/60%60, alt.durationSec%60)
+                state.tooltip = state.tooltip .. "\n" .. state.bestTime
+                local tempTime = timeLimit - alt.durationSec
+                
+                state.timeLeft =  ("%02i:%02i"):format(tempTime/60, tempTime%60)
             end
-            
-            state.bestTime = ("%02i:%02i:%02i"):format(alt.durationSec/60^2, alt.durationSec/60%60, alt.durationSec%60)
-            state.tooltip = state.tooltip .. "\n" .. state.bestTime
-            local tempTime = timeLimit - alt.durationSec
-            
-            state.timeLeft =  ("%02i:%02i"):format(tempTime/60, tempTime%60)
+        else 
+            arr[i] = {
+                mapID = mapID,
+                show = true,
+                changed = true,
+                name = name,
+                icon = icon,
+                level = nil,
+                score = nil,
+                deplete = false,
+                duration = nil,
+                timeLeft = nil,
+                bestTime = nil,
+                tooltip = name .. "\n",
+                abbr = L.dungeonNames[mapID] or "",
+            }
         end
     end    
     
@@ -165,7 +192,7 @@ local function renderDungeons(arr, boundFrame)
     local borderWidth = L.config.buttonSettings.borderDimension.borderWidth
     local backdropInfo = L.config.buttonSettings.backdropInfo
     local timeRunner = PlayerGetTimerunningSeasonID()
-
+    
     for k, maps in pairs(arr) do
         if L.regions.subRegion[k] == nil then
             L.regions.subRegion[k] = {
@@ -194,7 +221,6 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].buttonFrame:SetAttribute("type", "spell")
         L.regions.subRegion[k].buttonFrame:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
 
-        
         L.regions.subRegion[k].borderFrame:SetSize(sizeX + (borderWidth/2), sizeY + (borderWidth/2))
         L.regions.subRegion[k].borderFrame:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 0)
         L.regions.subRegion[k].borderFrame:SetFrameStrata("BACKGROUND")
@@ -228,22 +254,21 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].text1:SetPoint("TOP", L.regions.subRegion[k].buttonFrame, "TOP", 0, 8)
         L.regions.subRegion[k].text1:SetText(("%s"):format(maps.abbr))
         
-        if not timeRunner or timeRunner == 0 then
-            L.regions.subRegion[k].text2:SetFont(L.config.buttonSettings.textSettings.text2.font, L.config.buttonSettings.textSettings.text2.size, "OUTLINE")
-            L.regions.subRegion[k].text2:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 8)
-            L.regions.subRegion[k].text2:SetText(("%s"):format(maps.level))
-            L.regions.subRegion[k].text2:SetTextColor(r,g,b, 1)
-            
-            L.regions.subRegion[k].text3:SetFont(L.config.buttonSettings.textSettings.text3.font, L.config.buttonSettings.textSettings.text3.size, "OUTLINE")
-            L.regions.subRegion[k].text3:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, 4)
-            L.regions.subRegion[k].text3:SetText(("%s"):format(maps.score))
-            L.regions.subRegion[k].text3:SetTextColor(r,g,b, 1)
-            
-            L.regions.subRegion[k].text4:SetFont(L.config.buttonSettings.textSettings.text4.font, L.config.buttonSettings.textSettings.text4.size, "OUTLINE")
-            L.regions.subRegion[k].text4:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, -18)
-            L.regions.subRegion[k].text4:SetText(("%s"):format(maps.timeLeft))
+        -- if not timeRunner or timeRunner == 0 then
+        L.regions.subRegion[k].text2:SetFont(L.config.buttonSettings.textSettings.text2.font, L.config.buttonSettings.textSettings.text2.size, "OUTLINE")
+        L.regions.subRegion[k].text2:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 8)
+        L.regions.subRegion[k].text2:SetText(("%s"):format(maps.level or ""))
+        L.regions.subRegion[k].text2:SetTextColor(r,g,b, 1)
+        
+        L.regions.subRegion[k].text3:SetFont(L.config.buttonSettings.textSettings.text3.font, L.config.buttonSettings.textSettings.text3.size, "OUTLINE")
+        L.regions.subRegion[k].text3:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, 4)
+        L.regions.subRegion[k].text3:SetText(("%s"):format(maps.score or ""))
+        L.regions.subRegion[k].text3:SetTextColor(r,g,b, 1)
+        L.regions.subRegion[k].text4:SetFont(L.config.buttonSettings.textSettings.text4.font, L.config.buttonSettings.textSettings.text4.size, "OUTLINE")
+        L.regions.subRegion[k].text4:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, -18)
+        L.regions.subRegion[k].text4:SetText(("%s"):format(maps.score or ""))
         L.regions.subRegion[k].text4:SetTextColor(r,g,b, 1)
-        end
+        -- end
         
         L.regions.subRegion[k].icon:SetAllPoints()
         L.regions.subRegion[k].icon:SetTexture(maps.icon)
@@ -304,11 +329,12 @@ else
 end
 
 frame:SetScript("OnEvent", function(self, event, ...)    
+
     if event == "ADDON_LOADED" or event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" or event == "PLAYER_ENTERING_WORLD" or event == "WEEKLY_REWARDS_UPDATE" then
-        if event == "ADDON_LOADED" or event == "PLAYER_ENTERING_WORLD" then
+        if event == "ADDON_LOADED" or event == "PLAYER_ENTERING_WORLD" then  
             self:UnregisterEvent(event)
         end
-        main(L.dungeonStates, event)
+        main(L.dungeonStates, event, ...)
         renderDungeons(L.dungeonStates, iconFrame)
     end
 
