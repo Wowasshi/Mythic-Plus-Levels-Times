@@ -59,14 +59,13 @@ addon.dungeonNames = {
     [166] = "GD",   -- Grimrail Depot
     [169] = "ID",   -- Iron Docks
     --Legion
+    [198] = "DT",   -- Darkheart Thicket
+    [199] = "BRH",  -- Blackrook Hold
     [200] = "HoV",  -- Halls of Valor
     [206] = "NL",   -- Neltharion's Lair
     [210] = "CoS",  -- Court of Stars
     [227] = "LOWR", -- Lower Karazhan
     [234] = "UPPR", -- Uppper Karazhan
-    [198] = "DT",   -- Darkheart Thicket
-    [199] = "BRH",  -- Blackrook Hold
-    [239] = "SotT",  -- Seat of the Triumvirate
     -- BFA
     [244] = "AD",    -- Atal'Dazar
     [245] = "FH",    -- Freehold
@@ -100,29 +99,34 @@ addon.dungeonNames = {
     [463] = "Fall",  -- Dawn of the Infinite: Galakrond's Fall
     [464] = "Rise",  -- Dawn of the Infinite: Murozond's Rise
     -- TWW
+    [500] = "RO",    -- The Rookery
     [501] = "SV",    -- The Stonevault
     [502] = "CoT",   -- City of Threads
-    [500] = "RO",    -- The Rookery
     [504] = "DC",    -- Darkflame Cleft
     [506] = "CM",    -- Cinderbrew Meadery
     
     -- TWW S3
-    [505] = "Dawn",  -- Dawnbreaker
+    [378] = "HoA",   -- Halls of Atonement
     [391] = "Strt",  -- Tazavesh: Streets of Wonder
     [392] = "Gmbt",  -- Tazavesh: So'Leah's Gambit
     [499] = "PotSF", -- Priory of the Sacred Flame    
-    [525] = "OF",    -- Operation: Floodgate    
-    [378] = "HoA",   -- Halls of Atonement
-    [542] = "Dome",  -- Eco-Dome Al'dani  
     [503] = "AraK",  -- Ara-Kara, City of Echoes    
-
+    [505] = "Dawn",  -- Dawnbreaker
+    [525] = "OF",    -- Operation: Floodgate    
+    [542] = "Dome",  -- Eco-Dome Al'dani  
+    
     -- MID S1
+    [161] = "Sky",    -- Skyreach
+    [239] = "SotT",  -- Seat of the Triumvirate
     -- [556] = "PoS",   -- Pit of Saron
     -- [557] = "WS",    -- Windrunner Spire
     -- [558] = "MT",    -- Magister's Terrace
     -- [559] = "NPX",   -- Nexus-Point Xenas
     -- [560] = "MC",    -- Maisara Caverns
-    -- [161] = "Sky",    -- Skyreach
+}
+
+addon.legionRemixDungeonsMapIDs = {
+    198,199,200,206,210,227,234,
 }
 
 addon.dungeonTeleportSpellName = {
@@ -197,19 +201,16 @@ addon.dungeonTeleportSpellName = {
 
 addon.dungeonTeleportSpellID = {
     [2]   = 131204,
-    [438] = 410080,
-    [456] = 424142,
-    [507] = 445424,
     [165] = 159899,
     [166] = 159900,
     [169] = 159896,
+    [198] = 424163,
+    [199] = 424153,
     [200] = 393764,
     [206] = 410078,
     [210] = 393766,
     [227] = 373262,
     [234] = 373262,
-    [198] = 424163,
-    [199] = 424153,
     [244] = 424187,
     [245] = 410071,
     -- [246] = 0 ,
@@ -239,17 +240,20 @@ addon.dungeonTeleportSpellID = {
     [400] = 393262,
     [401] = 393279,
     [402] = 393273,
-    [405] = 393267,
-    [404] = 393276,
     -- [403] = 0 ,
+    [404] = 393276,
+    [405] = 393267,
     [406] = 393283,
+    [438] = 410080,
+    [456] = 424142,
     [463] = 424197,
     [464] = 424197,
+    [500] = 445443,
     [501] = 445269,
     [502] = 445416,
-    [500] = 445443,
     [504] = 445441,
     [506] = 445440, -- Path of the Flaming Brewery(445440) -- Path of the Waterworks(467546)
+    [507] = 445424,
     -- TWW S3
     [378] = 354465,
     [391] = 367416,
@@ -260,13 +264,13 @@ addon.dungeonTeleportSpellID = {
     [525] = 1216786,
     [542] = 1237215,
     -- MID S1
-    -- [239] = 1254551,    -- New in Midnight
+    -- [161] = 1254557,  -- Skyreach
+    -- [239] = 1254551,    -- Seat of the Triumvirate
     -- [556] = 1254556,   -- Pit of Saron
     -- [557] = 1254400,    -- Windrunner Spire
     -- [558] = 1254572,    -- Magister's Terrace
     -- [559] = 1254563,   -- Nexus-Point Xenas [PH]
     -- [560] = 1254559,    -- Maisara Caverns [PH]
-    -- [161] = 1254557,  -- Skyreach
 }
 
 addon.colors = {
