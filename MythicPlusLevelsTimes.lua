@@ -85,8 +85,13 @@ local main = function (arr, event)
         return 
     end
     
-    
-    local map_table = C_ChallengeMode.GetMapTable()
+    local map_table = {}
+    local timeRunner = PlayerGetTimerunningSeasonID()
+    if timeRunner then
+        map_table = L.legionRemixDungeonsMapIDs
+    else
+        map_table = C_ChallengeMode.GetMapTable()
+    end
     
     if L.config.sortByScore then
        sort_dungeons(map_table)
@@ -96,7 +101,7 @@ local main = function (arr, event)
         local mapID = map_table[i]
         local alts, score = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mapID)
         local name, _, timeLimit, icon = C_ChallengeMode.GetMapUIInfo(mapID)
-        
+
         local timeFormatted = ("%02i:%02i:%02i"):format(timeLimit/60^2, timeLimit/60%60, timeLimit/60)
         arr[i] = {
             mapID = mapID,
@@ -128,9 +133,7 @@ local main = function (arr, event)
             local tempTime = timeLimit - alt.durationSec
             
             state.timeLeft =  ("%02i:%02i"):format(tempTime/60, tempTime%60)
-            
         end
-        
     end    
     
     return true
@@ -161,7 +164,8 @@ local function renderDungeons(arr, boundFrame)
     local spacing = L.config.buttonSettings.buttonDimension.spacing
     local borderWidth = L.config.buttonSettings.borderDimension.borderWidth
     local backdropInfo = L.config.buttonSettings.backdropInfo
-    
+    local timeRunner = PlayerGetTimerunningSeasonID()
+
     for k, maps in pairs(arr) do
         if L.regions.subRegion[k] == nil then
             L.regions.subRegion[k] = {
@@ -224,20 +228,22 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].text1:SetPoint("TOP", L.regions.subRegion[k].buttonFrame, "TOP", 0, 8)
         L.regions.subRegion[k].text1:SetText(("%s"):format(maps.abbr))
         
-        L.regions.subRegion[k].text2:SetFont(L.config.buttonSettings.textSettings.text2.font, L.config.buttonSettings.textSettings.text2.size, "OUTLINE")
-        L.regions.subRegion[k].text2:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 8)
-        L.regions.subRegion[k].text2:SetText(("%s"):format(maps.level))
-        L.regions.subRegion[k].text2:SetTextColor(r,g,b, 1)
-        
-        L.regions.subRegion[k].text3:SetFont(L.config.buttonSettings.textSettings.text3.font, L.config.buttonSettings.textSettings.text3.size, "OUTLINE")
-        L.regions.subRegion[k].text3:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, 4)
-        L.regions.subRegion[k].text3:SetText(("%s"):format(maps.score))
-        L.regions.subRegion[k].text3:SetTextColor(r,g,b, 1)
-        
-        L.regions.subRegion[k].text4:SetFont(L.config.buttonSettings.textSettings.text4.font, L.config.buttonSettings.textSettings.text4.size, "OUTLINE")
-        L.regions.subRegion[k].text4:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, -18)
-        L.regions.subRegion[k].text4:SetText(("%s"):format(maps.timeLeft))
+        if not timeRunner or timeRunner == 0 then
+            L.regions.subRegion[k].text2:SetFont(L.config.buttonSettings.textSettings.text2.font, L.config.buttonSettings.textSettings.text2.size, "OUTLINE")
+            L.regions.subRegion[k].text2:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 8)
+            L.regions.subRegion[k].text2:SetText(("%s"):format(maps.level))
+            L.regions.subRegion[k].text2:SetTextColor(r,g,b, 1)
+            
+            L.regions.subRegion[k].text3:SetFont(L.config.buttonSettings.textSettings.text3.font, L.config.buttonSettings.textSettings.text3.size, "OUTLINE")
+            L.regions.subRegion[k].text3:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, 4)
+            L.regions.subRegion[k].text3:SetText(("%s"):format(maps.score))
+            L.regions.subRegion[k].text3:SetTextColor(r,g,b, 1)
+            
+            L.regions.subRegion[k].text4:SetFont(L.config.buttonSettings.textSettings.text4.font, L.config.buttonSettings.textSettings.text4.size, "OUTLINE")
+            L.regions.subRegion[k].text4:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, -18)
+            L.regions.subRegion[k].text4:SetText(("%s"):format(maps.timeLeft))
         L.regions.subRegion[k].text4:SetTextColor(r,g,b, 1)
+        end
         
         L.regions.subRegion[k].icon:SetAllPoints()
         L.regions.subRegion[k].icon:SetTexture(maps.icon)
