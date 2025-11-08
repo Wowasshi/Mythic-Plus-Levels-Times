@@ -266,7 +266,7 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].text3:SetTextColor(r,g,b, 1)
         L.regions.subRegion[k].text4:SetFont(L.config.buttonSettings.textSettings.text4.font, L.config.buttonSettings.textSettings.text4.size, "OUTLINE")
         L.regions.subRegion[k].text4:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, -18)
-        L.regions.subRegion[k].text4:SetText(("%s"):format(maps.score or ""))
+        L.regions.subRegion[k].text4:SetText(("%s"):format(maps.timeLeft or ""))
         L.regions.subRegion[k].text4:SetTextColor(r,g,b, 1)
         -- end
         
