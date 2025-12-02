@@ -118,11 +118,11 @@ addon.dungeonNames = {
     -- MID S1
     [161] = "Sky",    -- Skyreach
     [239] = "SotT",  -- Seat of the Triumvirate
-    -- [556] = "PoS",   -- Pit of Saron
-    -- [557] = "WS",    -- Windrunner Spire
-    -- [558] = "MT",    -- Magister's Terrace
-    -- [559] = "NPX",   -- Nexus-Point Xenas
-    -- [560] = "MC",    -- Maisara Caverns
+    [556] = "PoS",   -- Pit of Saron
+    [557] = "WS",    -- Windrunner Spire
+    [558] = "MT",    -- Magister's Terrace
+    [559] = "NPX",   -- Nexus-Point Xenas
+    [560] = "MC",    -- Maisara Caverns
 }
 
 addon.legionRemixDungeonsMapIDs = {
@@ -190,13 +190,13 @@ addon.dungeonTeleportSpellName = {
     [542] = "Path of the Eco-Dome",
 
     -- MID S1
-    -- [239] = "Path of Dark Dereliction",  -- Seat of the Triumvirate
-    -- [556] = "Path of Unyielding Blight",   -- Pit of Saron
-    -- [557] = "Path of the Windrunner",    -- Windrunner Spire
-    -- [558] = "Path of Devoted Magistry",    -- Magister's Terrace
-    -- [559] = "Path of Nexus-Point Xenas",   -- Nexus-Point Xenas [PH]
-    -- [560] = "Path of the Maisara Caverns",    -- Maisara Caverns [PH]
-    -- [161] = "Path of the Crowning Pinnacle",  -- Skyreach
+    [239] = "Path of Dark Dereliction",  -- Seat of the Triumvirate
+    [556] = "Path of Unyielding Blight",   -- Pit of Saron
+    [557] = "Path of the Windrunner",    -- Windrunner Spire
+    [558] = "Path of Devoted Magistry",    -- Magister's Terrace
+    [559] = "Path of Nexus-Point Xenas",   -- Nexus-Point Xenas [PH]
+    [560] = "Path of the Maisara Caverns",    -- Maisara Caverns [PH]
+    [161] = "Path of the Crowning Pinnacle",  -- Skyreach
 }
 
 addon.dungeonTeleportSpellID = {
@@ -264,13 +264,13 @@ addon.dungeonTeleportSpellID = {
     [525] = 1216786,
     [542] = 1237215,
     -- MID S1
-    -- [161] = 1254557,  -- Skyreach
-    -- [239] = 1254551,    -- Seat of the Triumvirate
-    -- [556] = 1254556,   -- Pit of Saron
-    -- [557] = 1254400,    -- Windrunner Spire
-    -- [558] = 1254572,    -- Magister's Terrace
-    -- [559] = 1254563,   -- Nexus-Point Xenas [PH]
-    -- [560] = 1254559,    -- Maisara Caverns [PH]
+    [161] = 1254557,  -- Skyreach
+    [239] = 1254551,    -- Seat of the Triumvirate
+    [556] = 1254556,   -- Pit of Saron
+    [557] = 1254400,    -- Windrunner Spire
+    [558] = 1254572,    -- Magister's Terrace
+    [559] = 1254563,   -- Nexus-Point Xenas [PH]
+    [560] = 1254559,    -- Maisara Caverns [PH]
 }
 
 addon.colors = {
