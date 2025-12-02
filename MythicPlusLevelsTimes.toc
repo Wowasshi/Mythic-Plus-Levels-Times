@@ -2,7 +2,7 @@
 ## Title: Mythic Plus Levels & Times
 ## Author: Wowasshi
 ## Notes: Display completion times for mythic plus dungeons.
-## Version: 1.0.6
+## Version: 1.0.7
 
 
 ## Main Files
