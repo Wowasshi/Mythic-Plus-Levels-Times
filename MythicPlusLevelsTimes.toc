@@ -1,4 +1,4 @@
-## Interface: 110205
+## Interface: 110207
 ## Title: Mythic Plus Levels & Times
 ## Author: Wowasshi
 ## Notes: Display completion times for mythic plus dungeons.
