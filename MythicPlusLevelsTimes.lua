@@ -185,7 +185,7 @@ local function updateCooldown(spellID)
 end
 
 local function renderDungeons(arr, boundFrame)
-    
+
     local sizeX = L.config.buttonSettings.buttonDimension.x
     local sizeY = L.config.buttonSettings.buttonDimension.y
     local spacing = L.config.buttonSettings.buttonDimension.spacing
