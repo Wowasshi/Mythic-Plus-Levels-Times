@@ -1,8 +1,8 @@
-## Interface: 110207
+## Interface: 120000
 ## Title: Mythic Plus Levels & Times
 ## Author: Wowasshi
 ## Notes: Display completion times for mythic plus dungeons.
-## Version: 1.0.7
+## Version: 1.0.7.1
 
 
 ## Main Files
