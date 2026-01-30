@@ -177,10 +177,17 @@ local function spellInTable(spellID)
 end
 
 local function updateCooldown(spellID) 
-    for k, _ in pairs(L.regions.subRegion) do
-        local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
-        L.regions.subRegion[k].cooldown:Clear()
-        L.regions.subRegion[k].cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration)
+    local name, instanceType, difficultyIndex, difficultyName, maxPlayers, _, _, _, isRaid = GetInstanceInfo()
+    local isInRaid = instanceType == "raid" and isRaid
+    local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
+    
+    if not isInRaid and not isMythicPlus then
+        print ("Updating cooldown for spellID ", spellID)
+        for k, _ in pairs(L.regions.subRegion) do
+            local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
+            L.regions.subRegion[k].cooldown:Clear()
+            L.regions.subRegion[k].cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration)
+        end
     end
 end
 
@@ -192,7 +199,11 @@ local function renderDungeons(arr, boundFrame)
     local borderWidth = L.config.buttonSettings.borderDimension.borderWidth
     local backdropInfo = L.config.buttonSettings.backdropInfo
     local timeRunner = PlayerGetTimerunningSeasonID()
-    
+    local name, instanceType, difficultyIndex, difficultyName, maxPlayers, _, _, _, isRaid = GetInstanceInfo()
+    local isInRaid = instanceType == "raid" and isRaid
+    local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
+
+
     for k, maps in pairs(arr) do
         if L.regions.subRegion[k] == nil then
             L.regions.subRegion[k] = {
@@ -273,7 +284,7 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].icon:SetAllPoints()
         L.regions.subRegion[k].icon:SetTexture(maps.icon)
 
-        if spellID then
+        if spellID and not isInRaid and not isMythicPlus then
             local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
             L.regions.subRegion[k].cooldown:SetAllPoints()
             L.regions.subRegion[k].cooldown:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
