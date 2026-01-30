@@ -182,7 +182,6 @@ local function updateCooldown(spellID)
     local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
     
     if not isInRaid and not isMythicPlus then
-        print ("Updating cooldown for spellID ", spellID)
         for k, _ in pairs(L.regions.subRegion) do
             local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
             L.regions.subRegion[k].cooldown:Clear()
