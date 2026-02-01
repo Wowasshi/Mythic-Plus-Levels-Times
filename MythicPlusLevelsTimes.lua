@@ -178,10 +178,11 @@ end
 
 local function updateCooldown(spellID) 
     local name, instanceType, difficultyIndex, difficultyName, maxPlayers, _, _, _, isRaid = GetInstanceInfo()
-    local isInRaid = instanceType == "raid" and isRaid
+    -- local isInRaid = instanceType == "raid" and isRaid
     local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
+    -- local isTimeWalking = difficultyName == "Timewalking"
     
-    if not isInRaid and not isMythicPlus then
+    if not isMythicPlus and not UnitAffectingCombat("player") then
         for k, _ in pairs(L.regions.subRegion) do
             local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
             L.regions.subRegion[k].cooldown:Clear()
@@ -197,11 +198,11 @@ local function renderDungeons(arr, boundFrame)
     local spacing = L.config.buttonSettings.buttonDimension.spacing
     local borderWidth = L.config.buttonSettings.borderDimension.borderWidth
     local backdropInfo = L.config.buttonSettings.backdropInfo
-    local timeRunner = PlayerGetTimerunningSeasonID()
+    -- local timeRunner = PlayerGetTimerunningSeasonID()
     local name, instanceType, difficultyIndex, difficultyName, maxPlayers, _, _, _, isRaid = GetInstanceInfo()
-    local isInRaid = instanceType == "raid" and isRaid
+    -- local isInRaid = instanceType == "raid" and isRaid
     local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
-
+    -- local isTimeWalking = difficultyName == "Timewalking"
 
     for k, maps in pairs(arr) do
         if L.regions.subRegion[k] == nil then
@@ -239,7 +240,9 @@ local function renderDungeons(arr, boundFrame)
         if (type(mySpellID) == "table") then
             local faction = UnitFactionGroup("player")
             if (faction == "Alliance" or faction == "Horde") then
-                mySpellID = mySpellID[UnitFactionGroup("player")]
+                mySpellID = mySpellID[faction]
+            else    
+                mySpellID = nil
             end
         end
         local spellID = nil
@@ -283,11 +286,11 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].icon:SetAllPoints()
         L.regions.subRegion[k].icon:SetTexture(maps.icon)
 
-        if spellID and not isInRaid and not isMythicPlus then
-            local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
+        if spellID and not isMythicPlus then
+            local spellCooldownInfo = C_Spell.GetSpellCooldown(mySpellID)
             L.regions.subRegion[k].cooldown:SetAllPoints()
             L.regions.subRegion[k].cooldown:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
-            if spellCooldownInfo.isEnabled then
+            if not UnitAffectingCombat("player") and spellCooldownInfo.isEnabled then
                 L.regions.subRegion[k].cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.modRate)
                 L.regions.subRegion[k].cooldown:SetHideCountdownNumbers(true)
             end
