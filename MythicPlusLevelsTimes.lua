@@ -245,16 +245,16 @@ local function renderDungeons(arr, boundFrame)
                 mySpellID = nil
             end
         end
-        local spellID = nil
+        local isSpellKnown = false
         if type(mySpellID) == "number" then
-            spellID = C_Spell.GetSpellIDForSpellIdentifier(mySpellID)
+            isSpellKnown = C_SpellBook.IsSpellInSpellBook(mySpellID)
         end
-        if not spellID then
-            L.regions.subRegion[k].borderFrame:SetBackdropBorderColor(0,0,0,1)
-            L.regions.subRegion[k].borderFrame:SetBackdropColor(0,0,0,1)
-        else
+        if isSpellKnown then
             L.regions.subRegion[k].borderFrame:SetBackdropBorderColor(255/255,215/255,0/255,1)
             L.regions.subRegion[k].borderFrame:SetBackdropColor(255/255,215/255,0/255,1)
+        else
+            L.regions.subRegion[k].borderFrame:SetBackdropBorderColor(0,0,0,1)
+            L.regions.subRegion[k].borderFrame:SetBackdropColor(0,0,0,1)
         end
 
         local c = L.colors[maps.level or 0]
@@ -286,7 +286,7 @@ local function renderDungeons(arr, boundFrame)
         L.regions.subRegion[k].icon:SetAllPoints()
         L.regions.subRegion[k].icon:SetTexture(maps.icon)
 
-        if spellID and not isMythicPlus then
+        if isSpellKnown and not isMythicPlus then
             local spellCooldownInfo = C_Spell.GetSpellCooldown(mySpellID)
             L.regions.subRegion[k].cooldown:SetAllPoints()
             L.regions.subRegion[k].cooldown:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
