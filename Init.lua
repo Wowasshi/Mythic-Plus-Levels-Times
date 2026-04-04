@@ -192,9 +192,9 @@ addon.dungeonTeleportSpellName = {
     -- MID S1
     [239] = "Path of Dark Dereliction",  -- Seat of the Triumvirate
     [556] = "Path of Unyielding Blight",   -- Pit of Saron
-    [557] = "Path of the Windrunner",    -- Windrunner Spire
+    [557] = "Path of the Windrunners",    -- Windrunner Spire
     [558] = "Path of Devoted Magistry",    -- Magister's Terrace
-    [559] = "Path of Nexus-Point Xenas",   -- Nexus-Point Xenas [PH]
+    [559] = "Path of the Fractured Core",   -- Nexus-Point Xenas [PH]
     [560] = "Path of the Maisara Caverns",    -- Maisara Caverns [PH]
     [161] = "Path of the Crowning Pinnacle",  -- Skyreach
 }
