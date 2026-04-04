@@ -111,7 +111,7 @@ local main = function (arr, event, ...)
         local alts, score = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mapID)
         local name, _, timeLimit, icon = C_ChallengeMode.GetMapUIInfo(mapID)
 
-        local timeFormatted = ("%02i:%02i:%02i"):format(timeLimit/60^2, timeLimit/60%60, timeLimit/60)
+        local timeFormatted = ("%02i:%02i:%02i"):format(timeLimit/60^2, timeLimit/60%60, timeLimit%60)
         if not timeRunner or timeRunner == 0 then
             arr[i] = {
                 mapID = mapID,
@@ -167,26 +167,29 @@ local main = function (arr, event, ...)
     
 end
 
-local function spellInTable(spellID)
-    for _, v in pairs(L.dungeonTeleportSpellID) do
-        if spellID == v then
-            return true
-        end
+-- Build a reverse lookup set for teleport spell IDs
+local teleportSpellSet = {}
+for _, v in pairs(L.dungeonTeleportSpellID) do
+    if type(v) == "table" then
+        for _, id in pairs(v) do teleportSpellSet[id] = true end
+    else
+        teleportSpellSet[v] = true
     end
-    return false
 end
 
-local function updateCooldown(spellID) 
-    local name, instanceType, difficultyIndex, difficultyName, maxPlayers, _, _, _, isRaid = GetInstanceInfo()
-    -- local isInRaid = instanceType == "raid" and isRaid
+local function updateCooldowns()
+    local _, instanceType = GetInstanceInfo()
     local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
-    -- local isTimeWalking = difficultyName == "Timewalking"
-    
+
     if not isMythicPlus and not UnitAffectingCombat("player") then
+        -- All teleport spells share a cooldown, so query any known one
+        local spellID = next(teleportSpellSet)
+        if not spellID then return end
+        local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
         for k, _ in pairs(L.regions.subRegion) do
-            local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID)
-            L.regions.subRegion[k].cooldown:Clear()
-            L.regions.subRegion[k].cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration)
+            local region = L.regions.subRegion[k]
+            region.cooldown:Clear()
+            region.cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration)
         end
     end
 end
@@ -198,15 +201,18 @@ local function renderDungeons(arr, boundFrame)
     local spacing = L.config.buttonSettings.buttonDimension.spacing
     local borderWidth = L.config.buttonSettings.borderDimension.borderWidth
     local backdropInfo = L.config.buttonSettings.backdropInfo
-    -- local timeRunner = PlayerGetTimerunningSeasonID()
-    local name, instanceType, difficultyIndex, difficultyName, maxPlayers, _, _, _, isRaid = GetInstanceInfo()
-    -- local isInRaid = instanceType == "raid" and isRaid
+    local ts = L.config.buttonSettings.textSettings
+    local font1, size1 = ts.text1.font, ts.text1.size
+    local font2, size2 = ts.text2.font, ts.text2.size
+    local font3, size3 = ts.text3.font, ts.text3.size
+    local font4, size4 = ts.text4.font, ts.text4.size
+    local _, instanceType = GetInstanceInfo()
     local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
-    -- local isTimeWalking = difficultyName == "Timewalking"
 
     for k, maps in pairs(arr) do
-        if L.regions.subRegion[k] == nil then
-            L.regions.subRegion[k] = {
+        local region = L.regions.subRegion[k]
+        if region == nil then
+            region = {
                 buttonFrame = CreateFrame("Button", "MythicPlusTimesBar" .. k .. "Button", boundFrame, "InsecureActionButtonTemplate"),
                 borderFrame = nil,
                 text1 = nil,
@@ -216,32 +222,33 @@ local function renderDungeons(arr, boundFrame)
                 icon = nil,
                 cooldown = nil
             }
-            L.regions.subRegion[k].borderFrame = CreateFrame("Frame", "BorderFrame" .. k, L.regions.subRegion[k].buttonFrame, "BackdropTemplate")
-            L.regions.subRegion[k].text1 = L.regions.subRegion[k].buttonFrame:CreateFontString(nil, "OVERLAY")
-            L.regions.subRegion[k].text2 = L.regions.subRegion[k].buttonFrame:CreateFontString(nil, "OVERLAY")
-            L.regions.subRegion[k].text3 = L.regions.subRegion[k].buttonFrame:CreateFontString(nil, "OVERLAY")
-            L.regions.subRegion[k].text4 = L.regions.subRegion[k].buttonFrame:CreateFontString(nil, "OVERLAY")
-            L.regions.subRegion[k].icon = L.regions.subRegion[k].buttonFrame:CreateTexture(maps.name, "ARTWORK")
-            L.regions.subRegion[k].cooldown = CreateFrame("Cooldown", "MyTeleportButtonCooldown" .. k, L.regions.subRegion[k].borderFrame, "CooldownFrameTemplate")
+            region.borderFrame = CreateFrame("Frame", "BorderFrame" .. k, region.buttonFrame, "BackdropTemplate")
+            region.text1 = region.buttonFrame:CreateFontString(nil, "OVERLAY")
+            region.text2 = region.buttonFrame:CreateFontString(nil, "OVERLAY")
+            region.text3 = region.buttonFrame:CreateFontString(nil, "OVERLAY")
+            region.text4 = region.buttonFrame:CreateFontString(nil, "OVERLAY")
+            region.icon = region.buttonFrame:CreateTexture(maps.name, "ARTWORK")
+            region.cooldown = CreateFrame("Cooldown", "MyTeleportButtonCooldown" .. k, region.borderFrame, "CooldownFrameTemplate")
+            L.regions.subRegion[k] = region
         end
 
-        L.regions.subRegion[k].buttonFrame:SetSize(sizeX,sizeY)
-        L.regions.subRegion[k].buttonFrame:SetFrameStrata("HIGH")
-        L.regions.subRegion[k].buttonFrame:SetPoint("LEFT", boundFrame, "LEFT", ((k-1)*sizeX) + (k*(spacing+(borderWidth/2))),0)
-        L.regions.subRegion[k].buttonFrame:RegisterForClicks("AnyUp", "AnyDown")
-        L.regions.subRegion[k].buttonFrame:SetAttribute("type", "spell")
-        L.regions.subRegion[k].buttonFrame:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
+        region.buttonFrame:SetSize(sizeX,sizeY)
+        region.buttonFrame:SetFrameStrata("HIGH")
+        region.buttonFrame:SetPoint("LEFT", boundFrame, "LEFT", ((k-1)*sizeX) + (k*(spacing+(borderWidth/2))),0)
+        region.buttonFrame:RegisterForClicks("AnyUp", "AnyDown")
+        region.buttonFrame:SetAttribute("type", "spell")
+        region.buttonFrame:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
 
-        L.regions.subRegion[k].borderFrame:SetSize(sizeX + (borderWidth/2), sizeY + (borderWidth/2))
-        L.regions.subRegion[k].borderFrame:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 0)
-        L.regions.subRegion[k].borderFrame:SetFrameStrata("BACKGROUND")
-        L.regions.subRegion[k].borderFrame:SetBackdrop(backdropInfo)
+        region.borderFrame:SetSize(sizeX + (borderWidth/2), sizeY + (borderWidth/2))
+        region.borderFrame:SetPoint("CENTER", region.buttonFrame, "CENTER", 0, 0)
+        region.borderFrame:SetFrameStrata("BACKGROUND")
+        region.borderFrame:SetBackdrop(backdropInfo)
         local mySpellID = L.dungeonTeleportSpellID[maps.mapID]
         if (type(mySpellID) == "table") then
             local faction = UnitFactionGroup("player")
             if (faction == "Alliance" or faction == "Horde") then
                 mySpellID = mySpellID[faction]
-            else    
+            else
                 mySpellID = nil
             end
         end
@@ -249,12 +256,13 @@ local function renderDungeons(arr, boundFrame)
         if type(mySpellID) == "number" then
             isSpellKnown = C_SpellBook.IsSpellInSpellBook(mySpellID)
         end
+
         if isSpellKnown then
-            L.regions.subRegion[k].borderFrame:SetBackdropBorderColor(255/255,215/255,0/255,1)
-            L.regions.subRegion[k].borderFrame:SetBackdropColor(255/255,215/255,0/255,1)
+            region.borderFrame:SetBackdropBorderColor(255/255,215/255,0/255,1)
+            region.borderFrame:SetBackdropColor(255/255,215/255,0/255,1)
         else
-            L.regions.subRegion[k].borderFrame:SetBackdropBorderColor(0,0,0,1)
-            L.regions.subRegion[k].borderFrame:SetBackdropColor(0,0,0,1)
+            region.borderFrame:SetBackdropBorderColor(0,0,0,1)
+            region.borderFrame:SetBackdropColor(0,0,0,1)
         end
 
         local c = L.colors[maps.level or 0]
@@ -262,41 +270,39 @@ local function renderDungeons(arr, boundFrame)
             c = L.color_deplete
         end
         local r, g, b = c.r/255, c.g/255, c.b/255
-        
-        L.regions.subRegion[k].text1:SetFont(L.config.buttonSettings.textSettings.text1.font, L.config.buttonSettings.textSettings.text1.size, "OUTLINE")
-        L.regions.subRegion[k].text1:SetPoint("TOP", L.regions.subRegion[k].buttonFrame, "TOP", 0, 8)
-        L.regions.subRegion[k].text1:SetText(("%s"):format(maps.abbr))
-        
-        -- if not timeRunner or timeRunner == 0 then
-        L.regions.subRegion[k].text2:SetFont(L.config.buttonSettings.textSettings.text2.font, L.config.buttonSettings.textSettings.text2.size, "OUTLINE")
-        L.regions.subRegion[k].text2:SetPoint("CENTER", L.regions.subRegion[k].buttonFrame, "CENTER", 0, 8)
-        L.regions.subRegion[k].text2:SetText(("%s"):format(maps.level or ""))
-        L.regions.subRegion[k].text2:SetTextColor(r,g,b, 1)
-        
-        L.regions.subRegion[k].text3:SetFont(L.config.buttonSettings.textSettings.text3.font, L.config.buttonSettings.textSettings.text3.size, "OUTLINE")
-        L.regions.subRegion[k].text3:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, 4)
-        L.regions.subRegion[k].text3:SetText(("%s"):format(maps.score or ""))
-        L.regions.subRegion[k].text3:SetTextColor(r,g,b, 1)
-        L.regions.subRegion[k].text4:SetFont(L.config.buttonSettings.textSettings.text4.font, L.config.buttonSettings.textSettings.text4.size, "OUTLINE")
-        L.regions.subRegion[k].text4:SetPoint("BOTTOM", L.regions.subRegion[k].buttonFrame, "BOTTOM", 0, -18)
-        L.regions.subRegion[k].text4:SetText(("%s"):format(maps.timeLeft or ""))
-        L.regions.subRegion[k].text4:SetTextColor(r,g,b, 1)
-        -- end
-        
-        L.regions.subRegion[k].icon:SetAllPoints()
-        L.regions.subRegion[k].icon:SetTexture(maps.icon)
+
+        region.text1:SetFont(font1, size1, "OUTLINE")
+        region.text1:SetPoint("TOP", region.buttonFrame, "TOP", 0, 8)
+        region.text1:SetText(("%s"):format(maps.abbr))
+
+        region.text2:SetFont(font2, size2, "OUTLINE")
+        region.text2:SetPoint("CENTER", region.buttonFrame, "CENTER", 0, 8)
+        region.text2:SetText(("%s"):format(maps.level or ""))
+        region.text2:SetTextColor(r,g,b, 1)
+
+        region.text3:SetFont(font3, size3, "OUTLINE")
+        region.text3:SetPoint("BOTTOM", region.buttonFrame, "BOTTOM", 0, 4)
+        region.text3:SetText(("%s"):format(maps.score or ""))
+        region.text3:SetTextColor(r,g,b, 1)
+        region.text4:SetFont(font4, size4, "OUTLINE")
+        region.text4:SetPoint("BOTTOM", region.buttonFrame, "BOTTOM", 0, -18)
+        region.text4:SetText(("%s"):format(maps.timeLeft or ""))
+        region.text4:SetTextColor(r,g,b, 1)
+
+        region.icon:SetAllPoints()
+        region.icon:SetTexture(maps.icon)
 
         if isSpellKnown and not isMythicPlus then
             local spellCooldownInfo = C_Spell.GetSpellCooldown(mySpellID)
-            L.regions.subRegion[k].cooldown:SetAllPoints()
-            L.regions.subRegion[k].cooldown:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
+            region.cooldown:SetAllPoints()
+            region.cooldown:SetAttribute("spell", L.dungeonTeleportSpellName[maps.mapID])
             if not UnitAffectingCombat("player") and spellCooldownInfo.isEnabled then
-                L.regions.subRegion[k].cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.modRate)
-                L.regions.subRegion[k].cooldown:SetHideCountdownNumbers(true)
+                region.cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.modRate)
+                region.cooldown:SetHideCountdownNumbers(true)
             end
         end
-        
-        L.regions.subRegion[k].buttonFrame:Show()
+
+        region.buttonFrame:Show()
     end
 end
 
@@ -308,7 +314,6 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
 frame:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
 frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
-frame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
 local iconFrame = CreateFrame("Button", "MythicPlusTimesBar", frame, "InsecureActionButtonTemplate")
 iconFrame:SetAllPoints()
@@ -327,15 +332,15 @@ end
 local status, pveFrameLoaded = pcall(function() return PVEFrame end)
 
 if status and pveFrameLoaded then
-    PVEFrame:HookScript("onShow",showFrame)
-    PVEFrame:HookScript("onHide",hideFrame)
-else 
+    PVEFrame:HookScript("OnShow",showFrame)
+    PVEFrame:HookScript("OnHide",hideFrame)
+else
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("ADDON_LOADED")
-    eventFrame:SetScript("OnEvent", function(self, addOn)
+    eventFrame:SetScript("OnEvent", function(self, event, addOn)
         if addOn == "Blizzard_PVEUI" then
-            PVEFrame:HookScript("onShow",showFrame)
-            PVEFrame:HookScript("onHide",hideFrame)
+            PVEFrame:HookScript("OnShow",showFrame)
+            PVEFrame:HookScript("OnHide",hideFrame)
             self:UnregisterAllEvents()
         end
     end)
@@ -351,10 +356,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         renderDungeons(L.dungeonStates, iconFrame)
     end
 
-    if event == "SPELL_UPDATE_COOLDOWN" then
-        local spellId = ...
-        if spellInTable(spellId) then
-            updateCooldown(spellId)
-        end
+    if event == "SPELL_UPDATE_COOLDOWN" and self:IsShown() then
+        updateCooldowns()
     end
 end)
