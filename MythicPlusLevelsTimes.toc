@@ -3,8 +3,10 @@
 ## Author: Wowasshi
 ## Notes: Display completion times for mythic plus dungeons.
 ## Version: 1.0.7.9
+## SavedVariablesPerCharacter: MPLTSettings
 
 
 ## Main Files
 Init.lua
+Options.lua
 MythicPlusLevelsTimes.lua

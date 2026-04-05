@@ -3,11 +3,13 @@ local _, addon = ...
     
 
 addon.regions = {
-    subRegion = {}
+    subRegion = {},
+    overlayRegion = {}
 }
 
 addon.config = {
     sortByScore = true,
+    enableOverlay = false, -- default, overridden by saved variables
     buttonSettings = {
         buttonDimension = {
             x = 59,
