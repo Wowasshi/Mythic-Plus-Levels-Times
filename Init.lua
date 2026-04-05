@@ -196,7 +196,7 @@ addon.dungeonTeleportSpellName = {
     [558] = "Path of Devoted Magistry",    -- Magister's Terrace
     [559] = "Path of the Fractured Core",   -- Nexus-Point Xenas [PH]
     [560] = "Path of the Maisara Caverns",    -- Maisara Caverns [PH]
-    [161] = "Path of the Crowning Pinnacle",  -- Skyreach
+    [161] = "Path of the Skies",  -- Skyreach
 }
 
 addon.dungeonTeleportSpellID = {
