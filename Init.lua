@@ -264,7 +264,7 @@ addon.dungeonTeleportSpellID = {
     [525] = 1216786,
     [542] = 1237215,
     -- MID S1
-    [161] = 1254557,  -- Skyreach
+    [161] = 159898,  -- Skyreach
     [239] = 1254551,    -- Seat of the Triumvirate
     [556] = 1254556,   -- Pit of Saron
     [557] = 1254400,    -- Windrunner Spire
