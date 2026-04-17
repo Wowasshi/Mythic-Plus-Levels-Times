@@ -388,13 +388,6 @@ local function updateOverlays()
                 isSpellKnown = C_SpellBook.IsSpellInSpellBook(mySpellID)
             end
 
-            -- Gold tint on Blizzard's icon when spell is known
-            if isSpellKnown then
-                blizzIcon.Icon:SetVertexColor(1, 0.84, 0, 1)
-            else
-                blizzIcon.Icon:SetVertexColor(1, 1, 1, 1)
-            end
-
             -- Scale font sizes relative to icon size (base is 59px)
             local scale = (iconW or 52) / 59
             local fontScore, sizeScore = ts.text3.font, ts.text3.size * scale
@@ -439,12 +432,6 @@ end
 local function hideOverlays()
     for _, overlay in pairs(L.regions.overlayRegion) do
         overlay.buttonFrame:Hide()
-    end
-    -- Reset Blizzard icon tints
-    if ChallengesFrame and ChallengesFrame.DungeonIcons then
-        for _, blizzIcon in pairs(ChallengesFrame.DungeonIcons) do
-            blizzIcon.Icon:SetVertexColor(1, 1, 1, 1)
-        end
     end
 end
 
