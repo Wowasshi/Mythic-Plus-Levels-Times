@@ -177,6 +177,19 @@ for _, v in pairs(L.dungeonTeleportSpellID) do
     end
 end
 
+local function resolveSpellID(mapID)
+    local mySpellID = L.dungeonTeleportSpellID[mapID]
+    if type(mySpellID) == "table" then
+        local faction = UnitFactionGroup("player")
+        if faction == "Alliance" or faction == "Horde" then
+            mySpellID = mySpellID[faction]
+        else
+            mySpellID = nil
+        end
+    end
+    return mySpellID
+end
+
 local function updateCooldowns()
     local _, instanceType = GetInstanceInfo()
     local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
@@ -190,6 +203,13 @@ local function updateCooldowns()
             local region = L.regions.subRegion[k]
             region.cooldown:Clear()
             region.cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration)
+        end
+        for k, _ in pairs(L.regions.overlayRegion) do
+            local overlay = L.regions.overlayRegion[k]
+            if overlay.cooldown and overlay.buttonFrame:IsShown() then
+                overlay.cooldown:Clear()
+                overlay.cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration)
+            end
         end
     end
 end
@@ -243,15 +263,7 @@ local function renderDungeons(arr, boundFrame)
         region.borderFrame:SetPoint("CENTER", region.buttonFrame, "CENTER", 0, 0)
         region.borderFrame:SetFrameStrata("BACKGROUND")
         region.borderFrame:SetBackdrop(backdropInfo)
-        local mySpellID = L.dungeonTeleportSpellID[maps.mapID]
-        if (type(mySpellID) == "table") then
-            local faction = UnitFactionGroup("player")
-            if (faction == "Alliance" or faction == "Horde") then
-                mySpellID = mySpellID[faction]
-            else
-                mySpellID = nil
-            end
-        end
+        local mySpellID = resolveSpellID(maps.mapID)
         local isSpellKnown = false
         if type(mySpellID) == "number" then
             isSpellKnown = C_SpellBook.IsSpellInSpellBook(mySpellID)
@@ -306,6 +318,125 @@ local function renderDungeons(arr, boundFrame)
     end
 end
 
+----------- ChallengesFrame Overlay -----------
+
+local function getDungeonStateByMapID(mapID)
+    for _, state in pairs(L.dungeonStates) do
+        if state.mapID == mapID then
+            return state
+        end
+    end
+    return nil
+end
+
+local overlayActive = false
+
+local function updateOverlays()
+    if not ChallengesFrame or not ChallengesFrame.DungeonIcons then return end
+
+    local icons = ChallengesFrame.DungeonIcons
+    local _, instanceType = GetInstanceInfo()
+    local isMythicPlus = instanceType == "party" and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
+    local ts = L.config.buttonSettings.textSettings
+
+    for i = 1, #icons do
+        local blizzIcon = icons[i]
+        local mapID = blizzIcon.mapID
+        local state = getDungeonStateByMapID(mapID)
+
+        local overlay = L.regions.overlayRegion[i]
+        if overlay == nil then
+            overlay = {
+                buttonFrame = CreateFrame("Button", "MPLTOverlay" .. i .. "Button", blizzIcon, "InsecureActionButtonTemplate"),
+                scoreText = nil,
+                timeText = nil,
+                cooldown = nil
+            }
+            overlay.scoreText = overlay.buttonFrame:CreateFontString(nil, "OVERLAY")
+            overlay.timeText = overlay.buttonFrame:CreateFontString(nil, "OVERLAY")
+            overlay.cooldown = CreateFrame("Cooldown", "MPLTOverlayCooldown" .. i, overlay.buttonFrame, "CooldownFrameTemplate")
+
+            -- Forward mouse events to Blizzard icon for tooltips
+            overlay.buttonFrame:SetScript("OnEnter", function(self)
+                local parent = self:GetParent()
+                if parent and parent.OnEnter then
+                    parent:OnEnter()
+                end
+            end)
+            overlay.buttonFrame:SetScript("OnLeave", function(self)
+                GameTooltip_Hide()
+            end)
+
+            L.regions.overlayRegion[i] = overlay
+        end
+
+        if not mapID or not state then
+            overlay.buttonFrame:Hide()
+        else
+            -- Size to match the Blizzard icon dynamically
+            local iconW = blizzIcon:GetWidth()
+            overlay.buttonFrame:SetAllPoints(blizzIcon)
+            overlay.buttonFrame:SetFrameStrata("HIGH")
+            overlay.buttonFrame:RegisterForClicks("AnyUp", "AnyDown")
+            overlay.buttonFrame:SetAttribute("type", "spell")
+            overlay.buttonFrame:SetAttribute("spell", L.dungeonTeleportSpellName[mapID])
+
+            -- Resolve faction-specific spell ID
+            local mySpellID = resolveSpellID(mapID)
+            local isSpellKnown = false
+            if type(mySpellID) == "number" then
+                isSpellKnown = C_SpellBook.IsSpellInSpellBook(mySpellID)
+            end
+
+            -- Scale font sizes relative to icon size (base is 59px)
+            local scale = (iconW or 52) / 59
+            local fontScore, sizeScore = ts.text3.font, ts.text3.size * scale
+            local fontTime, sizeTime = ts.text4.font, ts.text4.size * scale
+
+            local c = L.colors[state.level or 0]
+            if state.deplete then
+                c = L.color_deplete
+            end
+            local r, g, b = c.r/255, c.g/255, c.b/255
+
+            overlay.scoreText:SetFont(fontScore, sizeScore, "OUTLINE")
+            overlay.scoreText:SetPoint("CENTER", overlay.buttonFrame, "CENTER", 0, 0)
+            overlay.scoreText:SetText(("%s"):format(state.score or ""))
+            overlay.scoreText:SetTextColor(r, g, b, 1)
+
+            overlay.timeText:SetFont(fontTime, sizeTime, "OUTLINE")
+            overlay.timeText:SetPoint("BOTTOM", overlay.buttonFrame, "BOTTOM", 0, 2)
+            overlay.timeText:SetText(("%s"):format(state.timeLeft or ""))
+            overlay.timeText:SetTextColor(r, g, b, 1)
+
+            -- Cooldown
+            if isSpellKnown and not isMythicPlus then
+                local spellCooldownInfo = C_Spell.GetSpellCooldown(mySpellID)
+                overlay.cooldown:SetAllPoints(overlay.buttonFrame)
+                if not UnitAffectingCombat("player") and spellCooldownInfo.isEnabled then
+                    overlay.cooldown:SetCooldown(spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.modRate)
+                    overlay.cooldown:SetHideCountdownNumbers(true)
+                end
+            end
+
+            overlay.buttonFrame:Show()
+        end
+    end
+
+    -- Hide any extra overlay frames beyond current icon count
+    for i = #icons + 1, #L.regions.overlayRegion do
+        L.regions.overlayRegion[i].buttonFrame:Hide()
+    end
+end
+
+local function hideOverlays()
+    for _, overlay in pairs(L.regions.overlayRegion) do
+        overlay.buttonFrame:Hide()
+    end
+end
+
+----------- Frame Setup -----------
+
 local frame = CreateFrame("Frame", "MythicPlusTimes" .. "Frame", UIParent)
 frame:SetSize(50*8,100)
 frame:SetPoint("BOTTOMLEFT", PVEFrame, "BOTTOMLEFT", 15,-130)
@@ -321,42 +452,88 @@ iconFrame:Show()
 
 frame:Hide()
 
+local function isChallengesTabVisible()
+    return ChallengesFrame and ChallengesFrame:IsVisible()
+end
+
 local function hideFrame(self)
     frame:Hide()
+    hideOverlays()
+    overlayActive = false
 end
 
 local function showFrame(self)
-    frame:Show()
+    if L.config.enableOverlay and isChallengesTabVisible() then
+        frame:Hide()
+        updateOverlays()
+        overlayActive = true
+    else
+        frame:Show()
+        hideOverlays()
+        overlayActive = false
+    end
+end
+
+local function setupChallengesHooks()
+    hooksecurefunc(ChallengesFrame, "Update", function()
+        if L.config.enableOverlay and PVEFrame:IsVisible() then
+            frame:Hide()
+            updateOverlays()
+            overlayActive = true
+        end
+    end)
+
+    ChallengesFrame:HookScript("OnHide", function()
+        hideOverlays()
+        overlayActive = false
+        if PVEFrame:IsVisible() then
+            frame:Show()
+        end
+    end)
 end
 
 local status, pveFrameLoaded = pcall(function() return PVEFrame end)
 
 if status and pveFrameLoaded then
-    PVEFrame:HookScript("OnShow",showFrame)
-    PVEFrame:HookScript("OnHide",hideFrame)
-else
-    local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("ADDON_LOADED")
-    eventFrame:SetScript("OnEvent", function(self, event, addOn)
-        if addOn == "Blizzard_PVEUI" then
-            PVEFrame:HookScript("OnShow",showFrame)
-            PVEFrame:HookScript("OnHide",hideFrame)
-            self:UnregisterAllEvents()
-        end
-    end)
+    PVEFrame:HookScript("OnShow", showFrame)
+    PVEFrame:HookScript("OnHide", hideFrame)
 end
 
-frame:SetScript("OnEvent", function(self, event, ...)    
+-- Wait for Blizzard_ChallengesUI and Blizzard_PVEUI to load
+local loaderFrame = CreateFrame("Frame")
+loaderFrame:RegisterEvent("ADDON_LOADED")
+loaderFrame:SetScript("OnEvent", function(self, event, addOn)
+    if addOn == "Blizzard_PVEUI" then
+        if not pveFrameLoaded then
+            PVEFrame:HookScript("OnShow", showFrame)
+            PVEFrame:HookScript("OnHide", hideFrame)
+        end
+    end
+    if addOn == "Blizzard_ChallengesUI" then
+        setupChallengesHooks()
+    end
+    -- Unregister once both are loaded
+    if PVEFrame and ChallengesFrame then
+        self:UnregisterAllEvents()
+    end
+end)
+
+frame:SetScript("OnEvent", function(self, event, ...)
 
     if event == "ADDON_LOADED" or event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" or event == "PLAYER_ENTERING_WORLD" or event == "WEEKLY_REWARDS_UPDATE" then
-        if event == "ADDON_LOADED" or event == "PLAYER_ENTERING_WORLD" then  
+        if event == "ADDON_LOADED" then
+            L:LoadSettings()
+            L:SetupOptionsPanel()
+            self:UnregisterEvent(event)
+        end
+        if event == "PLAYER_ENTERING_WORLD" then
             self:UnregisterEvent(event)
         end
         main(L.dungeonStates, event, ...)
         renderDungeons(L.dungeonStates, iconFrame)
     end
 
-    if event == "SPELL_UPDATE_COOLDOWN" and self:IsShown() then
+    if event == "SPELL_UPDATE_COOLDOWN" and (self:IsShown() or overlayActive) then
         updateCooldowns()
     end
 end)
