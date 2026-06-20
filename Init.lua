@@ -217,6 +217,7 @@ addon.dungeonTeleportSpellName = {
     [586] = "Path of the Worthy Aspirant",  -- Den of Nalorakk
     [587] = "Path of the Devious Smuggler", -- Murder Row
     [588] = "Path of Venomous Evolution", -- Alter of Fangs
+}
 
 addon.dungeonTeleportSpellID = {
     [2]   = 131204,
