@@ -125,6 +125,17 @@ addon.dungeonNames = {
     [558] = "MT",    -- Magister's Terrace
     [559] = "NPX",   -- Nexus-Point Xenas
     [560] = "MC",    -- Maisara Caverns
+
+    -- MID S2
+    -- [249] = "KR",    -- Kings' Rest
+    -- [250] = "ToS",   -- Temple of Sethraliss
+    -- [399] = "RLP",  -- Ruby Life Pools
+    [584] = "TBV",  -- The Blinding Vale
+    [585] = "VA",  -- Voidscare Arena
+    [586] = "DoN",  -- Den of Nalorakk
+    [587] = "MR",  -- Murder Row
+    [588] = "AoF",  -- Alter of Fangs
+
 }
 
 addon.legionRemixDungeonsMapIDs = {
@@ -151,8 +162,8 @@ addon.dungeonTeleportSpellName = {
     -- [246] = "Path of the ",    -- Tol Dagor
     [247] = "Path of the Azerite Refinery",    -- The MOTHERLODE!!
     [248] = "Path of Heart's Bane",   -- Waycrest Manor
-    -- [249] = "Path of the ",    -- Kings' Rest
-    -- [250] = "Path of the ",   -- Temple of Sethraliss
+    [249] = "Path of the Slumbering Conqueror",    -- Kings' Rest
+    [250] = "Path of the Sacred Temple",   -- Temple of Sethraliss
     [251] = "Path of Festering Rot",    -- The Underrot
     -- [252] = "Path of the ",  -- Shrine of the Storm
     [353] = "Path of the Besieged Harbor",   -- Siege of Boralus
@@ -199,10 +210,17 @@ addon.dungeonTeleportSpellName = {
     [559] = "Path of the Fractured Core",   -- Nexus-Point Xenas [PH]
     [560] = "Path of Cavernous Depths",    -- Maisara Caverns [PH]
     [161] = "Path of the Skies",  -- Skyreach
-}
+
+    -- MID S2
+    [584] = "Path of the Blooming Verdure",  -- The Blinding Vale
+    [585] = "Path of the Brutal Combatant",  -- Voidscare Arena
+    [586] = "Path of the Worthy Aspirant",  -- Den of Nalorakk
+    [587] = "Path of the Devious Smuggler", -- Murder Row
+    [588] = "Path of Venomous Evolution", -- Alter of Fangs
 
 addon.dungeonTeleportSpellID = {
     [2]   = 131204,
+    [161] = 159898,  -- Skyreach
     [165] = 159899,
     [166] = 159900,
     [169] = 159896,
@@ -213,6 +231,7 @@ addon.dungeonTeleportSpellID = {
     [210] = 393766,
     [227] = 373262,
     [234] = 373262,
+    [239] = 1254551,    -- Seat of the Triumvirate
     [244] = 424187,
     [245] = 410071,
     -- [246] = 0 ,
@@ -221,8 +240,8 @@ addon.dungeonTeleportSpellID = {
         ["Alliance"] = 467553,
     },
     [248] = 424167,
-    -- [249] = 0 ,
-    -- [250] = 0 ,
+    [249] = 1286831,
+    [250] = 1286828,
     [251] = 410074,
     -- [252] = 0 ,
     [353] = {
@@ -266,13 +285,17 @@ addon.dungeonTeleportSpellID = {
     [525] = 1216786,
     [542] = 1237215,
     -- MID S1
-    [161] = 159898,  -- Skyreach
-    [239] = 1254551,    -- Seat of the Triumvirate
     [556] = 1254556,   -- Pit of Saron
     [557] = 1254400,    -- Windrunner Spire
     [558] = 1254572,    -- Magister's Terrace
     [559] = 1254563,   -- Nexus-Point Xenas [PH]
     [560] = 1254559,    -- Maisara Caverns [PH]
+    -- MID S2
+    [584] = 1286801,  -- The Blinding Vale
+    [585] = 1286804,  -- Voidscare Arena
+    [586] = 1286807,  -- Den of Nalorakk
+    [587] = 1286809,  -- Murder Row
+    [588] = 1286812,  -- Alter of Fangs
 }
 
 addon.colors = {
